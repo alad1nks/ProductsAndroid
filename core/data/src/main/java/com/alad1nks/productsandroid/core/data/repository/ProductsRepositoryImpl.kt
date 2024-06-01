@@ -29,7 +29,13 @@ class ProductsRepositoryImpl @Inject constructor(
     private fun ProductsResponse.toModel(): List<Product> {
         return products.map { product ->
             with(product) {
-                Product(id, title, description, price, thumbnail)
+                Product(
+                    id = id,
+                    title = title ?: "",
+                    description = description ?: "",
+                    price = price ?: 0.0,
+                    thumbnail = thumbnail ?: ""
+                )
             }
         }
     }

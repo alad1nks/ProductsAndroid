@@ -1,5 +1,6 @@
 package com.alad1nks.productsandroid.feature.products
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -48,7 +49,10 @@ class ProductsViewModel @Inject constructor(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     { items -> _uiState.value = ProductsUiState.Data(items) },
-                    { _ -> _uiState.value = ProductsUiState.Error }
+                    { e ->
+                        Log.d("error", e.toString())
+                        _uiState.value = ProductsUiState.Error
+                    }
                 )
         )
         refresh()
@@ -69,7 +73,8 @@ class ProductsViewModel @Inject constructor(
                         _uiState.value = ProductsUiState.Data(products)
                         if (swipe) { _shouldEndRefresh.value = true }
                     },
-                    { _ ->
+                    { e ->
+                        Log.d("error", e.toString())
                         _uiState.value = ProductsUiState.Error
                         if (swipe) { _shouldEndRefresh.value = true }
                     }
@@ -95,7 +100,10 @@ class ProductsViewModel @Inject constructor(
                         }
                         _uiState.value = ProductsUiState.Data(products)
                     },
-                    { _ -> _uiState.value = ProductsUiState.Error }
+                    { e ->
+                        Log.d("error", e.toString())
+                        _uiState.value = ProductsUiState.Error
+                    }
                 )
         )
     }

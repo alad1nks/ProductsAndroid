@@ -24,16 +24,16 @@ class ProductRepositoryImpl @Inject constructor(
 
     private fun ProductResponse.toModel(): ProductInfo {
         return ProductInfo(
-            title = title,
-            description = description,
-            price = price,
-            discountPercentage = discountPercentage,
-            rating = rating,
-            stock = stock,
-            brand = brand,
-            category = category,
-            thumbnail = thumbnail,
-            images = images
+            title = title ?: "",
+            description = description ?: "",
+            price = price ?: 0.0,
+            discountPercentage = discountPercentage ?: 0.0,
+            rating = rating ?: 0.0,
+            stock = stock ?: 0,
+            brand = brand ?: "",
+            category = category ?: "",
+            thumbnail = thumbnail ?: "",
+            images = images ?: emptyList()
         )
     }
 }

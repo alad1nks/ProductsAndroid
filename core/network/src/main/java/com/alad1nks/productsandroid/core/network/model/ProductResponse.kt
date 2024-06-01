@@ -5,14 +5,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ProductResponse(
     val id: Int,
-    val title: String,
-    val description: String,
-    val price: Int,
-    val discountPercentage: Double,
-    val rating: Double,
-    val stock: Int,
-    val brand: String,
-    val category: String,
-    val thumbnail: String,
-    val images: List<String>
+    val title: String? = null,
+    val description: String? = null,
+    val price: Double? = null,
+    val discountPercentage: Double? = null,
+    val rating: Double? = null,
+    val stock: Int? = null,
+    val brand: String? = null,
+    val category: String? = null,
+    val thumbnail: String? = null,
+    val images: List<String>? = null
 )
