@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
@@ -73,7 +73,6 @@ internal fun ProductsRoute(
         onSearchValueChange = { viewModel.search(it) },
         uiState = uiState,
         onItemClick = onItemClick,
-        onScroll = { viewModel.loadMore(it) },
         darkTheme = darkTheme,
         onTryAgainClick = { viewModel.refresh() },
         modifier = modifier
@@ -91,7 +90,6 @@ internal fun ProductsScreen(
     onSearchValueChange: (String) -> Unit,
     uiState: ProductsUiState,
     onItemClick: (Int) -> Unit,
-    onScroll: (Int) -> Unit,
     darkTheme: Boolean,
     onTryAgainClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -128,7 +126,6 @@ internal fun ProductsScreen(
             ProductsContent(
                 uiState = uiState,
                 onItemClick = onItemClick,
-                onScroll = onScroll,
                 onTryAgainClick = onTryAgainClick,
                 modifier = Modifier
                     .fillMaxSize()
@@ -214,7 +211,6 @@ internal fun ProductsTopBar(
 internal fun ProductsContent(
     uiState: ProductsUiState,
     onItemClick: (Int) -> Unit,
-    onScroll: (Int) -> Unit,
     onTryAgainClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -223,7 +219,6 @@ internal fun ProductsContent(
             ProductsData(
                 products = uiState.products,
                 onClickItem = onItemClick,
-                onScroll = onScroll,
                 modifier = modifier
             )
         }
@@ -247,13 +242,12 @@ internal fun ProductsContent(
 internal fun ProductsData(
     products: List<Product>,
     onClickItem: (Int) -> Unit,
-    onScroll: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier
     ) {
-        itemsIndexed(products) { index, product ->
+        items(products) {  product ->
             ListItem(
                 headlineContent = {
                     Text(
@@ -288,9 +282,6 @@ internal fun ProductsData(
                     )
                 }
             )
-            if (index >= products.size - 1) {
-                onScroll(products.size)
-            }
         }
     }
 }

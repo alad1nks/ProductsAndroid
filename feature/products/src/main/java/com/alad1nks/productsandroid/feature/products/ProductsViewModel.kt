@@ -87,27 +87,6 @@ class ProductsViewModel @Inject constructor(
         searchQuerySubject.onNext(query)
     }
 
-    fun loadMore(skip: Int) {
-        disposables.add(
-            repository.getProducts(searchQuery.value ?: "", skip)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { items ->
-                        val products = when (val state = uiState.value) {
-                            is ProductsUiState.Data -> state.products + items
-                            else -> items
-                        }
-                        _uiState.value = ProductsUiState.Data(products)
-                    },
-                    { e ->
-                        Log.d("error", e.toString())
-                        _uiState.value = ProductsUiState.Error
-                    }
-                )
-        )
-    }
-
     fun changeTheme() {
         viewModelScope.launch {
             userDataRepository.changeTheme()

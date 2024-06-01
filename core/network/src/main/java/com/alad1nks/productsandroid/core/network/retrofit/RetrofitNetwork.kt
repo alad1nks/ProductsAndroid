@@ -22,8 +22,8 @@ private interface RetrofitNetworkApi {
     @GET("products/search")
     fun getProducts(
         @Query("q") q: String,
-        @Query("skip") skip: Int,
-        @Query("limit") limit: Int
+        @Query("skip") skip: Int = 0,
+        @Query("limit") limit: Int = Int.MAX_VALUE
     ): Single<ProductsResponse>
 
     @GET("products/{id}")
@@ -57,8 +57,8 @@ class RetrofitNetwork @Inject constructor(
         .build()
         .create(RetrofitNetworkApi::class.java)
 
-    override fun getProducts(search: String, skip: Int, limit: Int): Single<ProductsResponse> =
-        networkApi.getProducts(search, skip, limit)
+    override fun getProducts(search: String): Single<ProductsResponse> =
+        networkApi.getProducts(search)
 
     override fun getProduct(id: Int): Single<ProductResponse> =
         networkApi.getProduct(id)
