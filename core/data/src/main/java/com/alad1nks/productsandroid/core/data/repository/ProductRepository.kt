@@ -1,8 +1,8 @@
 package com.alad1nks.productsandroid.core.data.repository
 
 import com.alad1nks.productsandroid.core.model.ProductInfo
-import io.reactivex.rxjava3.core.Single
+import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
-    fun getProduct(id: Int): Single<ProductInfo>
+    suspend fun getProduct(id: Int): ProductInfo
 }

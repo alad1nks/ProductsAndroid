@@ -28,12 +28,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,6 +52,7 @@ import com.alad1nks.productsandroid.core.designsystem.components.ErrorScreen
 import com.alad1nks.productsandroid.core.designsystem.components.SearchBar
 import com.alad1nks.productsandroid.core.model.Product
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ProductsRoute(
     onShowSnackbar: suspend (String, String?) -> Boolean,
@@ -59,10 +60,10 @@ internal fun ProductsRoute(
     modifier: Modifier = Modifier,
     viewModel: ProductsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.observeAsState(initial = ProductsUiState.Loading)
-    val darkTheme by viewModel.darkTheme.collectAsState(initial = false)
-    val searchQuery by viewModel.searchQuery.observeAsState(initial = "")
-    val shouldEndRefresh by viewModel.shouldEndRefresh.observeAsState(initial = false)
+    val uiState by viewModel.uiState.collectAsState()
+    val darkTheme by viewModel.darkTheme.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val shouldEndRefresh by viewModel.shouldEndRefresh.collectAsState()
 
     ProductsScreen(
         onSwipe = { viewModel.refresh(true) },
@@ -92,18 +93,19 @@ internal fun ProductsScreen(
     onItemClick: (Int) -> Unit,
     darkTheme: Boolean,
     onTryAgainClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    pullToRefreshState: PullToRefreshState = rememberPullToRefreshState()
 ) {
-    val refreshState = rememberPullToRefreshState()
-    if (refreshState.isRefreshing) {
+    if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(true) {
             onSwipe()
         }
     }
+
     if (shouldEndRefresh) {
         LaunchedEffect(true) {
             onRefreshEnded()
-            refreshState.endRefresh()
+            pullToRefreshState.endRefresh()
         }
     }
 
@@ -120,7 +122,7 @@ internal fun ProductsScreen(
     ) { padding ->
         Box(
             modifier = Modifier
-                .nestedScroll(refreshState.nestedScrollConnection)
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
                 .padding(padding)
         ) {
             ProductsContent(
@@ -133,7 +135,7 @@ internal fun ProductsScreen(
             PullToRefreshContainer(
                 modifier = Modifier
                     .align(Alignment.TopCenter),
-                state = refreshState
+                state = pullToRefreshState
             )
         }
     }

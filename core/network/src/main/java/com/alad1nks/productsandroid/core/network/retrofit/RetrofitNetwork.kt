@@ -1,10 +1,9 @@
 package com.alad1nks.productsandroid.core.network.retrofit
 
 import com.alad1nks.productsandroid.core.network.NetworkDataSource
-import com.alad1nks.productsandroid.core.network.model.ProductResponse
 import com.alad1nks.productsandroid.core.network.model.ProductsResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import io.reactivex.rxjava3.core.Single
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -12,24 +11,19 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.http.GET
-import retrofit2.http.Path
 import retrofit2.http.Query
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private interface RetrofitNetworkApi {
+
     @GET("products/search")
-    fun getProducts(
-        @Query("q") q: String,
+    suspend fun getProducts(
+        @Query("q") q: String = "",
         @Query("skip") skip: Int = 0,
         @Query("limit") limit: Int = Int.MAX_VALUE
-    ): Single<ProductsResponse>
-
-    @GET("products/{id}")
-    fun getProduct(
-        @Path("id") id: Int
-    ): Single<ProductResponse>
+    ): ProductsResponse
 }
 
 private const val BASE_URL = "https://dummyjson.com/"
@@ -57,9 +51,6 @@ class RetrofitNetwork @Inject constructor(
         .build()
         .create(RetrofitNetworkApi::class.java)
 
-    override fun getProducts(search: String): Single<ProductsResponse> =
-        networkApi.getProducts(search)
-
-    override fun getProduct(id: Int): Single<ProductResponse> =
-        networkApi.getProduct(id)
+    override suspend fun getProducts(): ProductsResponse =
+        networkApi.getProducts()
 }

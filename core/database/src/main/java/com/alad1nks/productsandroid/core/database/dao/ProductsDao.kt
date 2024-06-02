@@ -10,11 +10,17 @@ import kotlinx.coroutines.flow.Flow
 interface ProductsDao {
 
     @Query("SELECT * FROM product")
-    fun getProducts(): Flow<List<ProductEntity>>
+    fun getProductListFlow(): Flow<List<ProductEntity>>
+
+    @Query("SELECT * FROM product")
+    fun getProductList(): List<ProductEntity>
+
+    @Query("SELECT * FROM product WHERE id = :id LIMIT 1")
+    suspend fun getProductFlow(id: Int): ProductEntity
 
     @Insert
-    fun insertProducts(products: List<ProductEntity>)
+    suspend fun insertProducts(products: List<ProductEntity>)
 
     @Query("DELETE FROM product")
-    fun clearProducts()
+    suspend fun clearProducts()
 }

@@ -1,8 +1,10 @@
 package com.alad1nks.productsandroid.core.data.repository
 
 import com.alad1nks.productsandroid.core.model.Product
-import io.reactivex.rxjava3.core.Single
+import kotlinx.coroutines.flow.Flow
 
 interface ProductsRepository {
-    fun getProducts(search: String): Single<List<Product>>
+    fun getProducts(): Flow<List<Product>>
+
+    suspend fun refreshProducts()
 }

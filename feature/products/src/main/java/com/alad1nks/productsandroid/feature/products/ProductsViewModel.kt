@@ -1,90 +1,64 @@
 package com.alad1nks.productsandroid.feature.products
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alad1nks.productsandroid.core.data.repository.ProductsRepository
 import com.alad1nks.productsandroid.core.data.repository.UserDataRepository
+import com.alad1nks.productsandroid.core.domain.FilterProductsUseCase
 import com.alad1nks.productsandroid.core.model.Product
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.schedulers.Schedulers
-import io.reactivex.rxjava3.subjects.PublishSubject
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class ProductsViewModel @Inject constructor(
     private val repository: ProductsRepository,
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val filterProductsUseCase: FilterProductsUseCase
 ) : ViewModel() {
-    private val disposables = CompositeDisposable()
 
-    private val _uiState: MutableLiveData<ProductsUiState> = MutableLiveData()
-    val uiState: LiveData<ProductsUiState> = _uiState
+    private val _uiState = MutableStateFlow<ProductsUiState>(ProductsUiState.Loading)
+    val uiState: StateFlow<ProductsUiState> = _uiState
 
-    private val _searchQuery = MutableLiveData("")
-    val searchQuery: LiveData<String> get() = _searchQuery
-    private val searchQuerySubject = PublishSubject.create<String>()
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> get() = _searchQuery.asStateFlow()
 
-    private val _shouldEndRefresh = MutableLiveData(false)
-    val shouldEndRefresh: LiveData<Boolean> get() = _shouldEndRefresh
+    private val _shouldEndRefresh = MutableStateFlow(false)
+    val shouldEndRefresh: StateFlow<Boolean> get() = _shouldEndRefresh.asStateFlow()
 
-    val darkTheme: Flow<Boolean> = userDataRepository.userData.map { it.darkTheme }
+    val darkTheme: StateFlow<Boolean> = userDataRepository.userData.map { it.darkTheme }
+        .stateIn(
+            scope = viewModelScope,
+            initialValue = false,
+            started = SharingStarted.WhileSubscribed(5_000)
+        )
 
     init {
-        disposables.add(
-            searchQuerySubject
-                .debounce(300, TimeUnit.MILLISECONDS)
-                .distinctUntilChanged()
-                .switchMapSingle { query ->
-                    repository.getProducts(query)
-                }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { items -> _uiState.value = ProductsUiState.Data(items) },
-                    { e ->
-                        Log.d("error", e.toString())
-                        _uiState.value = ProductsUiState.Error
-                    }
-                )
-        )
+        fetchAndFilterProducts()
         refresh()
     }
 
     fun refresh(swipe: Boolean = false) {
-        _uiState.value = ProductsUiState.Loading
-        disposables.add(
-            repository.getProducts(searchQuery.value ?: "")
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { items ->
-                        val products = when (val state = uiState.value) {
-                            is ProductsUiState.Data -> state.products + items
-                            else -> items
-                        }
-                        _uiState.value = ProductsUiState.Data(products)
-                        if (swipe) { _shouldEndRefresh.value = true }
-                    },
-                    { e ->
-                        Log.d("error", e.toString())
-                        _uiState.value = ProductsUiState.Error
-                        if (swipe) { _shouldEndRefresh.value = true }
-                    }
-                )
-        )
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.refreshProducts()
+            if (swipe) {
+                _shouldEndRefresh.emit(true)
+            }
+        }
     }
 
     fun search(query: String) {
         _searchQuery.value = query
-        searchQuerySubject.onNext(query)
     }
 
     fun changeTheme() {
@@ -97,9 +71,27 @@ class ProductsViewModel @Inject constructor(
         _shouldEndRefresh.value = false
     }
 
-    override fun onCleared() {
-        disposables.clear()
-        super.onCleared()
+    private fun fetchAndFilterProducts() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getProducts()
+                .onStart {
+                    _uiState.value = ProductsUiState.Loading
+                }
+                .catch {
+                    _uiState.value = ProductsUiState.Error
+                }
+                .combine(_searchQuery) { productList, search ->
+                    val filteredProductList = filterProductsUseCase(productList, search)
+                    if (productList.isEmpty() && search.isEmpty()) {
+                        ProductsUiState.Error
+                    } else {
+                        ProductsUiState.Data(filteredProductList)
+                    }
+                }
+                .collect { state ->
+                    _uiState.value = state
+                }
+        }
     }
 }
 
