@@ -9,6 +9,7 @@ import com.alad1nks.productsandroid.core.model.ProductInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,8 +22,11 @@ class ProductViewModel @Inject constructor(
 
     fun refresh(id: Int) {
         _uiState.value = ProductUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = ProductUiState.Data(repository.getProduct(id))
+        viewModelScope.launch {
+            val product = withContext(Dispatchers.IO) {
+                repository.getProduct(id)
+            }
+            _uiState.value = ProductUiState.Data(product)
         }
     }
 }
