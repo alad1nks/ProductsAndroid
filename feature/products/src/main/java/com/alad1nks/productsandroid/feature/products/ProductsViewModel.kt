@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.alad1nks.productsandroid.core.data.repository.ProductsRepository
 import com.alad1nks.productsandroid.core.data.repository.UserDataRepository
 import com.alad1nks.productsandroid.core.domain.FilterProductsUseCase
+import com.alad1nks.productsandroid.core.model.Brand
 import com.alad1nks.productsandroid.core.model.Product
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,9 @@ class ProductsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<ProductsUiState>(ProductsUiState.Loading)
     val uiState: StateFlow<ProductsUiState> = _uiState
 
+    private val _brandList = MutableStateFlow<List<Brand>>(emptyList())
+    val brandList: StateFlow<List<Brand>> get() = _brandList.asStateFlow()
+
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> get() = _searchQuery.asStateFlow()
 
@@ -46,6 +50,7 @@ class ProductsViewModel @Inject constructor(
 
     init {
         fetchAndFilterProducts()
+        fetchBrands()
         refresh()
     }
 
@@ -72,23 +77,44 @@ class ProductsViewModel @Inject constructor(
         _shouldEndRefresh.value = false
     }
 
+    fun selectBrand(index: Int) {
+        val updatedList = _brandList.value.toMutableList().apply {
+            val applied = !this[index].applied
+            this[index] = this[index].copy(applied = applied)
+        }.toList()
+
+        _brandList.value = updatedList
+    }
+
     private fun fetchAndFilterProducts() {
-        viewModelScope.launch {
-            repository.getProducts()
-                .onStart {
-                    _uiState.value = ProductsUiState.Loading
-                }
-                .catch {
-                    _uiState.value = ProductsUiState.Error
-                }
-                .combine(_searchQuery) { productList, search ->
-                    val filteredProductList = filterProductsUseCase(productList, search)
-                    Log.i("filteredProductList", "$filteredProductList")
-                    ProductsUiState.Data(filteredProductList)
-                }
-                .collect { state ->
-                    _uiState.value = state
-                }
+        viewModelScope.launch(Dispatchers.IO) {
+            combine(
+                repository.getProductListFlow(),
+                _searchQuery,
+                _brandList
+            ) { productList, search, brandList ->
+                val filteredProductList = filterProductsUseCase(productList, search, brandList)
+                Log.i("filteredProductList", "$filteredProductList")
+                ProductsUiState.Data(filteredProductList)
+            }.onStart {
+                Log.v("fetchAndFilterProducts", "Entering onStart")
+                _uiState.value = ProductsUiState.Loading
+            }.catch {e ->
+                Log.e("fetchAndFilterProducts", "Error fetching and filtering products: $e")
+                _uiState.value = ProductsUiState.Error
+            }.collect { state ->
+                _uiState.value = state
+            }
+        }
+    }
+
+    private fun fetchBrands() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getProductBrandListFlow().map { brandList ->
+                brandList.map { name -> Brand(name, false) }
+            }.collect { brands ->
+                _brandList.value = brands
+            }
         }
     }
 }

@@ -15,9 +15,14 @@ class ProductsRepositoryImpl @Inject constructor(
     private val dataSource: NetworkDataSource,
     private val dao: ProductsDao
 ) : ProductsRepository {
-    override fun getProducts(): Flow<List<Product>> {
-        Log.v("getProducts", "Entering function getProducts()")
+    override fun getProductListFlow(): Flow<List<Product>> {
+        Log.v("getProductListFlow", "Entering function getProductListFlow()")
         return dao.getProductListFlow().map { it.asModel() }
+    }
+
+    override fun getProductBrandListFlow(): Flow<List<String>> {
+        Log.v("getProductBrandListFlow", "Entering function getProductBrandListFlow()")
+        return dao.getProductBrandList()
     }
 
     override suspend fun refreshProducts() {
@@ -60,6 +65,7 @@ class ProductsRepositoryImpl @Inject constructor(
                     title = title,
                     description = description,
                     price = price,
+                    brand = brand,
                     thumbnail = thumbnail
                 )
             }

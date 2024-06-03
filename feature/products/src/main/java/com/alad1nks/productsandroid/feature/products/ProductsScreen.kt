@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,8 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,8 +51,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.alad1nks.productsandroid.core.designsystem.components.AnimatedShimmerListItem
+import com.alad1nks.productsandroid.core.designsystem.components.DropdownIcon
 import com.alad1nks.productsandroid.core.designsystem.components.ErrorScreen
 import com.alad1nks.productsandroid.core.designsystem.components.SearchBar
+import com.alad1nks.productsandroid.core.model.Brand
 import com.alad1nks.productsandroid.core.model.Product
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +69,7 @@ internal fun ProductsRoute(
     val darkTheme by viewModel.darkTheme.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val shouldEndRefresh by viewModel.shouldEndRefresh.collectAsState()
+    val brandList by viewModel.brandList.collectAsState()
 
     ProductsScreen(
         onSwipe = { viewModel.refresh(true) },
@@ -71,6 +77,8 @@ internal fun ProductsRoute(
         onRefreshEnded = { viewModel.onRefreshEnded() },
         onThemeIconClick = { viewModel.changeTheme() },
         searchValue = searchQuery,
+        brandList = brandList,
+        onBrandSelect = { viewModel.selectBrand(it) },
         onSearchValueChange = { viewModel.search(it) },
         uiState = uiState,
         onItemClick = onItemClick,
@@ -88,6 +96,8 @@ internal fun ProductsScreen(
     onRefreshEnded: () -> Unit,
     onThemeIconClick: () -> Unit,
     searchValue: String,
+    brandList: List<Brand>,
+    onBrandSelect: (Int) -> Unit,
     onSearchValueChange: (String) -> Unit,
     uiState: ProductsUiState,
     onItemClick: (Int) -> Unit,
@@ -116,6 +126,8 @@ internal fun ProductsScreen(
                 darkTheme = darkTheme,
                 onThemeIconClick = onThemeIconClick,
                 searchValue = searchValue,
+                brandList = brandList,
+                onBrandSelect = onBrandSelect,
                 onSearchValueChange = onSearchValueChange
             )
         }
@@ -148,6 +160,8 @@ internal fun ProductsTopBar(
     onThemeIconClick: () -> Unit,
     searchValue: String,
     onSearchValueChange: (String) -> Unit,
+    brandList: List<Brand>,
+    onBrandSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showSearchBar by remember { mutableStateOf(searchValue.isNotEmpty()) }
@@ -195,11 +209,27 @@ internal fun ProductsTopBar(
                     )
                 }
             }
-            IconButton(onClick = {  }) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = stringResource(R.string.more_icon)
-                )
+
+            DropdownIcon(
+                imageVector = Icons.Filled.MoreVert
+            ) {
+                brandList.forEachIndexed { index, brand ->
+                    val interactionSource = remember { MutableInteractionSource() }
+                    with(brand) {
+                        DropdownMenuItem(
+                            text = { Text(text = name) },
+                            onClick = { onBrandSelect(index) },
+                            trailingIcon = {
+                                Checkbox(
+                                    checked = applied,
+                                    onCheckedChange = {  },
+                                    interactionSource = interactionSource
+                                )
+                            },
+                            interactionSource = interactionSource
+                        )
+                    }
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

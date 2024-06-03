@@ -4,7 +4,9 @@ import com.alad1nks.productsandroid.core.model.Product
 import kotlinx.coroutines.flow.Flow
 
 interface ProductsRepository {
-    fun getProducts(): Flow<List<Product>>
+    fun getProductListFlow(): Flow<List<Product>>
+
+    fun getProductBrandListFlow(): Flow<List<String>>
 
     suspend fun refreshProducts()
 }
