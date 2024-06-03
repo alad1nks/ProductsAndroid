@@ -3,7 +3,6 @@ package com.alad1nks.productsandroid.core.network.retrofit
 import com.alad1nks.productsandroid.core.network.NetworkDataSource
 import com.alad1nks.productsandroid.core.network.model.ProductsResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
