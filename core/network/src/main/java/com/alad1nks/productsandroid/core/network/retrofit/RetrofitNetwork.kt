@@ -22,7 +22,7 @@ private interface RetrofitNetworkApi {
     suspend fun getProducts(
         @Query("q") q: String = "",
         @Query("skip") skip: Int = 0,
-        @Query("limit") limit: Int = Int.MAX_VALUE
+        @Query("limit") limit: Int = 0
     ): ProductsResponse
 }
 
