@@ -11,7 +11,6 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
-import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,9 +33,6 @@ class RetrofitNetwork @Inject constructor(
     private val client = OkHttpClient.Builder().addInterceptor { chain ->
         val requestBuilder = chain.request().newBuilder()
         val response = chain.proceed(requestBuilder.build())
-        if (response.code == 502) {
-            throw IOException("Server is turned off")
-        }
         return@addInterceptor response
     }.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)).build()
 
