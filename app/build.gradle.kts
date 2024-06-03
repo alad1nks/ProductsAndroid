@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    kotlin("kapt")
 }
 
 android {
@@ -69,7 +68,11 @@ dependencies {
     implementation(project(":feature:products"))
     implementation(project(":core:model"))
     implementation(project(":feature:product"))
-    kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.work.ktx)
+    implementation(project(":sync"))
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

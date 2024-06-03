@@ -35,6 +35,8 @@ class ProductsRepositoryImpl @Inject constructor(
                 Log.v("refreshProducts", "Updating products from network")
                 dao.clearProducts()
                 dao.insertProducts(productsResponseAsEntity)
+            } else {
+                Log.v("refreshProducts", "Product lists are equal")
             }
         } catch (e: Exception) {
             Log.e("ProductsRepository", "Error refreshing products: ${e.message}", e)
@@ -75,7 +77,7 @@ class ProductsRepositoryImpl @Inject constructor(
                     discountPercentage = discountPercentage ?: 0.0,
                     rating = rating ?: 0.0,
                     stock = stock ?: 0,
-                    brand = brand ?: "",
+                    brand = brand ?: "???",
                     category = category ?: "",
                     thumbnail = thumbnail ?: "",
                     images = images ?: emptyList()

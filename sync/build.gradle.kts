@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.alad1nks.productsandroid.core.data"
+    namespace = "com.alad1nks.productsandroid.sync"
     compileSdk = 34
 
     defaultConfig {
@@ -35,11 +35,10 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.work.ktx)
     implementation(libs.hilt.android)
-    implementation(project(":core:model"))
-    implementation(project(":core:network"))
-    implementation(project(":core:datastore"))
-    implementation(project(":core:database"))
+    implementation(libs.hilt.work)
+    implementation(project(":core:data"))
     kapt(libs.hilt.android.compiler)
     kapt(libs.hilt.compiler)
     testImplementation(libs.junit)
