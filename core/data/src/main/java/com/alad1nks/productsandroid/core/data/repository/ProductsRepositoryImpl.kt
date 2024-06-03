@@ -22,19 +22,22 @@ class ProductsRepositoryImpl @Inject constructor(
 
     override suspend fun refreshProducts() {
         Log.v("refreshProducts", "Entering function refreshProducts()")
+
         try {
-            dao.clearProducts()
             val productsResponse = dataSource.getProducts()
             val productsResponseAsEntity = productsResponse.asEntity()
+            Log.i("refreshProducts", "productsResponseAsEntity: $productsResponseAsEntity")
 
             val productEntityList = dao.getProductList()
+            Log.i("refreshProducts", "productEntityList: $productEntityList")
 
             if (productsResponseAsEntity != productEntityList) {
+                Log.v("refreshProducts", "Updating products from network")
                 dao.clearProducts()
                 dao.insertProducts(productsResponseAsEntity)
             }
         } catch (e: Exception) {
-            Log.e("ProductsRepositoryImpl", "Error refreshing products: ${e.message}", e)
+            Log.e("ProductsRepository", "Error refreshing products: ${e.message}", e)
 
             when (e) {
                 is IOException -> {

@@ -1,5 +1,6 @@
 package com.alad1nks.productsandroid.feature.products
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alad1nks.productsandroid.core.data.repository.ProductsRepository
@@ -72,7 +73,7 @@ class ProductsViewModel @Inject constructor(
     }
 
     private fun fetchAndFilterProducts() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             repository.getProducts()
                 .onStart {
                     _uiState.value = ProductsUiState.Loading
@@ -82,11 +83,8 @@ class ProductsViewModel @Inject constructor(
                 }
                 .combine(_searchQuery) { productList, search ->
                     val filteredProductList = filterProductsUseCase(productList, search)
-                    if (productList.isEmpty() && search.isEmpty()) {
-                        ProductsUiState.Error
-                    } else {
-                        ProductsUiState.Data(filteredProductList)
-                    }
+                    Log.i("filteredProductList", "$filteredProductList")
+                    ProductsUiState.Data(filteredProductList)
                 }
                 .collect { state ->
                     _uiState.value = state
